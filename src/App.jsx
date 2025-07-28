@@ -1,13 +1,14 @@
-import React from 'react';
-import {HashRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
-import {HelmetProvider} from 'react-helmet-async';
-import {QueryClient, QueryClientProvider} from 'react-query';
-import {Toaster} from 'react-hot-toast';
+import React, { useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from 'react-hot-toast';
 import './i18n';
 
-import {AuthProvider, useAuth} from './contexts/AuthContext';
-import {QRProvider} from './contexts/QRContext';
-import {ThemeProvider} from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuthStore } from './stores/useAuthStore';
+import { QRProvider } from './contexts/QRContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Components
 import Navbar from './components/Layout/Navbar';
@@ -16,8 +17,6 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 
 // Pages
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/Auth/LoginPage';
-import RegisterPage from './pages/Auth/RegisterPage';
 import Dashboard from './pages/Dashboard/Dashboard';
 import QRGenerator from './pages/QRGenerator/QRGenerator';
 import QRManager from './pages/QRManager/QRManager';
@@ -43,39 +42,35 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({children}) {
-  const {user, loading} = useAuth();
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  return user ? children : <Navigate to="/login" />;
-}
-
-function PublicRoute({children}) {
-  const {user, loading} = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  return !user ? children : <Navigate to="/dashboard" />;
+  return user ? children : <Navigate to="/" />;
 }
 
 function AppContent() {
-  const {user} = useAuth();
+  const { user, initializeAuth, loading } = useAuthStore();
+  
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {user && <Navbar />}
+      <Navbar />
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/qr/:id" element={<QRLandingPage />} />
-          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -96,7 +91,7 @@ function AppContent() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      {user && <Footer />}
+      <Footer />
       <Toaster position="top-right" />
     </div>
   );

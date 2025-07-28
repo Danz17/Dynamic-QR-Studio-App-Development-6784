@@ -14,11 +14,7 @@ export const useAuthStore = create(
         set({ loading: true });
         try {
           const response = await authService.login(email, password);
-          set({ 
-            user: response.user, 
-            isAuthenticated: true, 
-            loading: false 
-          });
+          set({ user: response.user, isAuthenticated: true, loading: false });
           toast.success('Login successful!');
           return response;
         } catch (error) {
@@ -27,16 +23,12 @@ export const useAuthStore = create(
           throw error;
         }
       },
-
+      
       register: async (userData) => {
         set({ loading: true });
         try {
           const response = await authService.register(userData);
-          set({ 
-            user: response.user, 
-            isAuthenticated: true, 
-            loading: false 
-          });
+          set({ user: response.user, isAuthenticated: true, loading: false });
           toast.success('Registration successful!');
           return response;
         } catch (error) {
@@ -45,45 +37,44 @@ export const useAuthStore = create(
           throw error;
         }
       },
-
+      
       logout: () => {
-        set({ user: null, isAuthenticated: false });
-        localStorage.removeItem('token');
-        toast.success('Logged out successfully');
+        authService.logout().then(() => {
+          set({ user: null, isAuthenticated: false });
+          toast.success('Logged out successfully');
+        });
       },
-
+      
       updateUser: (userData) => {
-        set(state => ({ 
-          user: { ...state.user, ...userData } 
-        }));
+        set(state => ({ user: { ...state.user, ...userData } }));
       },
-
+      
       initializeAuth: async () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          set({ loading: true });
-          try {
-            const user = await authService.getCurrentUser();
-            set({ user, isAuthenticated: true, loading: false });
-          } catch (error) {
-            localStorage.removeItem('token');
-            set({ loading: false });
+        set({ loading: true });
+        try {
+          const user = await authService.getCurrentUser();
+          if (user) {
+            set({ user, isAuthenticated: true });
           }
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+        } finally {
+          set({ loading: false });
         }
       },
-
+      
       // Check if user has specific role
       hasRole: (role) => {
         const { user } = get();
         return user?.role === role;
       },
-
+      
       // Check if user is super admin
       isSuperAdmin: () => {
         const { user } = get();
         return user?.role === 'superAdmin';
       },
-
+      
       // Check if user can access admin features
       canAccessAdmin: () => {
         const { user } = get();
@@ -92,10 +83,7 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
-      })
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated })
     }
   )
 );

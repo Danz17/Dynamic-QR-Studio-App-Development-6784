@@ -1,48 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import SafeIcon from '../common/SafeIcon';
+import AuthModal from '../components/Auth/AuthModal';
 import * as FiIcons from 'react-icons/fi';
 
-const {
-  FiGrid, FiBarChart3, FiUsers, FiShield, FiZap, FiGlobe, FiSmartphone,
-  FiSettings, FiTrendingUp, FiCheck, FiArrowRight, FiHeart, FiGithub,
-  FiTwitter, FiLinkedin
-} = FiIcons;
+const { FiGrid, FiBarChart3, FiUsers, FiShield, FiZap, FiGlobe, FiSmartphone, FiSettings, 
+  FiTrendingUp, FiCheck, FiArrowRight, FiHeart, FiGithub, FiTwitter, FiLinkedin } = FiIcons;
 
 function LandingPage() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+
   const features = [
-    {
-      icon: FiZap,
-      title: 'Dynamic QR Codes',
-      description: 'Create QR codes that can be edited and updated anytime without reprinting.'
-    },
-    {
-      icon: FiBarChart3,
-      title: 'Advanced Analytics',
-      description: 'Track scans, locations, devices, and user behavior with detailed insights.'
-    },
-    {
-      icon: FiUsers,
-      title: 'Team Collaboration',
-      description: 'Work together with role-based permissions and shared workspaces.'
-    },
-    {
-      icon: FiShield,
-      title: 'Security Features',
-      description: 'Password protection, expiration dates, and GDPR compliance built-in.'
-    },
-    {
-      icon: FiGlobe,
-      title: 'Landing Pages',
-      description: 'Create beautiful landing pages with drag-and-drop builder.'
-    },
-    {
-      icon: FiSettings,
-      title: 'API Integration',
-      description: 'Programmatic access with RESTful APIs and webhook support.'
-    }
+    { icon: FiZap, title: 'Dynamic QR Codes', description: 'Create QR codes that can be edited and updated anytime without reprinting.' },
+    { icon: FiBarChart3, title: 'Advanced Analytics', description: 'Track scans, locations, devices, and user behavior with detailed insights.' },
+    { icon: FiUsers, title: 'Team Collaboration', description: 'Work together with role-based permissions and shared workspaces.' },
+    { icon: FiShield, title: 'Security Features', description: 'Password protection, expiration dates, and GDPR compliance built-in.' },
+    { icon: FiGlobe, title: 'Landing Pages', description: 'Create beautiful landing pages with drag-and-drop builder.' },
+    { icon: FiSettings, title: 'API Integration', description: 'Programmatic access with RESTful APIs and webhook support.' }
   ];
 
   const stats = [
@@ -51,6 +28,11 @@ function LandingPage() {
     { label: 'Active Users', value: '25K+' },
     { label: 'Countries', value: '150+' }
   ];
+
+  const openAuthModal = (mode) => {
+    setAuthModalMode(mode);
+    setShowAuthModal(true);
+  };
 
   const version = process.env.VITE_APP_VERSION || '1.0.0';
   const currentYear = new Date().getFullYear();
@@ -61,36 +43,7 @@ function LandingPage() {
         <title>Dynamic QR Studio - Professional QR Code Generator & Analytics</title>
         <meta name="description" content="Create, customize, and manage dynamic QR codes with advanced analytics, team collaboration, and landing page builder." />
       </Helmet>
-
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                  <SafeIcon icon={FiGrid} className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">QR Studio</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 lg:py-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,22 +66,21 @@ function LandingPage() {
                   Generate, customize, and track QR codes with advanced analytics, team collaboration, and beautiful landing pages.
                 </p>
                 <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                  <Link
-                    to="/register"
+                  <button
+                    onClick={() => openAuthModal('register')}
                     className="bg-primary-600 text-white px-8 py-3 rounded-md hover:bg-primary-700 transition-colors flex items-center justify-center space-x-2"
                   >
                     <span>Start Free Trial</span>
                     <SafeIcon icon={FiArrowRight} className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    to="/login"
+                  </button>
+                  <button
+                    onClick={() => openAuthModal('login')}
                     className="border border-gray-300 text-gray-700 px-8 py-3 rounded-md hover:bg-gray-50 transition-colors text-center"
                   >
-                    Watch Demo
-                  </Link>
+                    Sign In
+                  </button>
                 </div>
               </motion.div>
-
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -232,13 +184,13 @@ function LandingPage() {
               <p className="text-xl text-blue-100 mb-8">
                 Join thousands of businesses using QR Studio to create amazing experiences.
               </p>
-              <Link
-                to="/register"
+              <button
+                onClick={() => openAuthModal('register')}
                 className="bg-white text-primary-600 px-8 py-4 rounded-md text-lg font-semibold hover:bg-gray-50 transition-colors inline-flex items-center space-x-2"
               >
                 <span>Start Your Free Trial</span>
                 <SafeIcon icon={FiArrowRight} className="w-5 h-5" />
-              </Link>
+              </button>
             </motion.div>
           </div>
         </section>
@@ -288,7 +240,6 @@ function LandingPage() {
                   </a>
                 </div>
               </div>
-
               {/* Quick Links */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
@@ -296,14 +247,20 @@ function LandingPage() {
                 </h3>
                 <ul className="space-y-2">
                   <li>
-                    <Link to="/login" className="text-gray-600 hover:text-gray-900 text-sm">
+                    <button
+                      onClick={() => openAuthModal('login')}
+                      className="text-gray-600 hover:text-gray-900 text-sm"
+                    >
                       Sign In
-                    </Link>
+                    </button>
                   </li>
                   <li>
-                    <Link to="/register" className="text-gray-600 hover:text-gray-900 text-sm">
+                    <button
+                      onClick={() => openAuthModal('register')}
+                      className="text-gray-600 hover:text-gray-900 text-sm"
+                    >
                       Get Started
-                    </Link>
+                    </button>
                   </li>
                   <li>
                     <a href="#features" className="text-gray-600 hover:text-gray-900 text-sm">
@@ -317,7 +274,6 @@ function LandingPage() {
                   </li>
                 </ul>
               </div>
-
               {/* Support */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
@@ -347,20 +303,26 @@ function LandingPage() {
                 </ul>
               </div>
             </div>
-
             <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-600 text-sm">
                 © {currentYear} QR Studio. All rights reserved.
               </p>
               <p className="text-gray-600 text-sm flex items-center mt-2 md:mt-0">
                 Built with{' '}
-                <SafeIcon icon={FiHeart} className="w-4 h-4 text-red-500 mx-1" />
-                and frustration by Alaa Qweider
+                <SafeIcon icon={FiHeart} className="w-4 h-4 text-red-500 mx-1" /> and frustration by
+                Alaa Qweider
               </p>
             </div>
           </div>
         </footer>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode={authModalMode}
+      />
     </>
   );
 }
