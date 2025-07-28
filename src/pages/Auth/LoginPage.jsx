@@ -8,17 +8,16 @@ import SafeIcon from '../../common/SafeIcon';
 import LoadingSpinner from '../../components/UI/LoadingSpinner';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiMail, FiLock, FiEye, FiEyeOff, FiGrid, FiAlertCircle } = FiIcons;
+const { FiMail, FiLock, FiEye, FiEyeOff, FiGrid, FiAlertCircle, FiShield } = FiIcons;
 
 function LoginPage() {
   const [formData, setFormData] = useState({
-    email: 'alaa@nulled.ai',
-    password: 'password'
+    email: '',
+    password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const { t } = useTranslation();
   const { login, loading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
@@ -31,24 +30,23 @@ function LoginPage() {
 
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-
+    
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -69,6 +67,20 @@ function LoginPage() {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleDemoLogin = (role) => {
+    if (role === 'superadmin') {
+      setFormData({
+        email: 'alaa@nulled.ai',
+        password: 'password'
+      });
+    } else {
+      setFormData({
+        email: 'demo@example.com',
+        password: 'password'
+      });
     }
   };
 
@@ -107,17 +119,48 @@ function LoginPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+            className="space-y-3"
           >
-            <div className="flex items-start">
-              <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-              <div>
-                <p className="text-sm text-blue-800 mb-2 font-medium">
-                  {t('auth.demoCredentials')}:
-                </p>
-                <div className="text-sm text-blue-700 font-mono bg-blue-100 p-2 rounded">
-                  <div>Email: alaa@nulled.ai</div>
-                  <div>Password: password</div>
+            {/* Super Admin Demo */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <SafeIcon icon={FiShield} className="w-5 h-5 text-purple-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm text-purple-800 mb-2 font-medium">
+                    Super Admin Demo:
+                  </p>
+                  <div className="text-sm text-purple-700 font-mono bg-purple-100 p-2 rounded mb-2">
+                    <div>Email: alaa@nulled.ai</div>
+                    <div>Password: password</div>
+                  </div>
+                  <button
+                    onClick={() => handleDemoLogin('superadmin')}
+                    className="text-xs text-purple-600 hover:text-purple-800 underline"
+                  >
+                    Fill credentials
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Regular Demo */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm text-blue-800 mb-2 font-medium">
+                    Regular Demo:
+                  </p>
+                  <div className="text-sm text-blue-700 font-mono bg-blue-100 p-2 rounded mb-2">
+                    <div>Email: demo@example.com</div>
+                    <div>Password: password</div>
+                  </div>
+                  <button
+                    onClick={() => handleDemoLogin('user')}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Fill credentials
+                  </button>
                 </div>
               </div>
             </div>
@@ -185,10 +228,7 @@ function LoginPage() {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <SafeIcon 
-                      icon={showPassword ? FiEyeOff : FiEye} 
-                      className="h-5 w-5 text-gray-400 hover:text-gray-600" 
-                    />
+                    <SafeIcon icon={showPassword ? FiEyeOff : FiEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   </button>
                 </div>
                 {errors.password && (

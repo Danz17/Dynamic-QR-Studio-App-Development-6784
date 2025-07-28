@@ -8,16 +8,14 @@ import SafeIcon from '../../common/SafeIcon';
 import LanguageSelector from '../UI/LanguageSelector';
 import * as FiIcons from 'react-icons/fi';
 
-const { 
-  FiMenu, FiX, FiHome, FiPlus, FiGrid, FiBarChart3, FiUsers, 
-  FiSettings, FiLogOut, FiUser, FiTemplate, FiUpload, FiEdit3,
-  FiShield, FiGlobe
+const {
+  FiMenu, FiX, FiHome, FiPlus, FiGrid, FiBarChart3, FiUsers, FiSettings,
+  FiLogOut, FiUser, FiTemplate, FiUpload, FiEdit3, FiShield, FiGlobe, FiTrendingUp
 } = FiIcons;
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
   const { t } = useTranslation();
   const { user, logout, isSuperAdmin } = useAuthStore();
   const { siteName, logoUrl } = useSettingsStore();
@@ -37,11 +35,7 @@ function Navbar() {
 
   // Add admin console for super admin
   if (isSuperAdmin()) {
-    navigation.push({
-      name: t('nav.admin'),
-      href: '/admin',
-      icon: FiShield
-    });
+    navigation.push({ name: t('nav.admin'), href: '/admin', icon: FiShield });
   }
 
   const handleLogout = () => {
@@ -86,12 +80,25 @@ function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Advanced Analytics Link */}
+            <Link
+              to="/analytics/advanced"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                location.pathname === '/analytics/advanced'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <SafeIcon icon={FiTrendingUp} className="w-4 h-4" />
+              <span className="hidden xl:block">Advanced</span>
+            </Link>
           </div>
 
           {/* User menu and language selector */}
           <div className="flex items-center space-x-4">
             <LanguageSelector />
-            
+
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -122,7 +129,6 @@ function Navbar() {
                           {user?.role} • {user?.plan}
                         </div>
                       </div>
-                      
                       <Link
                         to="/settings"
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -131,7 +137,6 @@ function Navbar() {
                         <SafeIcon icon={FiUser} className="w-4 h-4" />
                         <span>Profile</span>
                       </Link>
-                      
                       <Link
                         to="/settings"
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -140,7 +145,6 @@ function Navbar() {
                         <SafeIcon icon={FiSettings} className="w-4 h-4" />
                         <span>{t('nav.settings')}</span>
                       </Link>
-                      
                       <button
                         onClick={handleLogout}
                         className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -193,6 +197,20 @@ function Navbar() {
                   </Link>
                 );
               })}
+
+              {/* Advanced Analytics Link for Mobile */}
+              <Link
+                to="/analytics/advanced"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/analytics/advanced'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                <SafeIcon icon={FiTrendingUp} className="w-4 h-4" />
+                <span>Advanced Analytics</span>
+              </Link>
             </div>
           </motion.div>
         )}

@@ -20,6 +20,8 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import QRGenerator from './pages/QRGenerator/QRGenerator';
 import QRManager from './pages/QRManager/QRManager';
 import Analytics from './pages/Analytics/Analytics';
+import AdvancedAnalytics from './pages/Analytics/AdvancedAnalytics';
+import AdminConsole from './pages/AdminConsole/AdminConsole';
 import Templates from './pages/Templates/Templates';
 import BulkGenerator from './pages/BulkGenerator/BulkGenerator';
 import LandingPageBuilder from './pages/LandingPageBuilder/LandingPageBuilder';
@@ -39,21 +41,21 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <LoadingSpinner />;
   }
-  
+
   return user ? children : <Navigate to="/login" />;
 }
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <LoadingSpinner />;
   }
-  
+
   return !user ? children : <Navigate to="/dashboard" />;
 }
 
@@ -70,18 +72,20 @@ function AppContent() {
           <Route path="/qr/:id" element={<QRLandingPage />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-          
+
           {/* Protected Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/generate" element={<ProtectedRoute><QRGenerator /></ProtectedRoute>} />
           <Route path="/manage" element={<ProtectedRoute><QRManager /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/analytics/advanced" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminConsole /></ProtectedRoute>} />
           <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
           <Route path="/bulk" element={<ProtectedRoute><BulkGenerator /></ProtectedRoute>} />
           <Route path="/landing-builder" element={<ProtectedRoute><LandingPageBuilder /></ProtectedRoute>} />
           <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          
+
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

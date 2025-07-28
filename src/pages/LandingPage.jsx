@@ -5,9 +5,10 @@ import { Helmet } from 'react-helmet-async';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { 
-  FiGrid, FiBarChart3, FiUsers, FiShield, FiZap, FiGlobe,
-  FiSmartphone, FiSettings, FiTrendingUp, FiCheck, FiArrowRight
+const {
+  FiGrid, FiBarChart3, FiUsers, FiShield, FiZap, FiGlobe, FiSmartphone,
+  FiSettings, FiTrendingUp, FiCheck, FiArrowRight, FiHeart, FiGithub,
+  FiTwitter, FiLinkedin
 } = FiIcons;
 
 function LandingPage() {
@@ -50,6 +51,9 @@ function LandingPage() {
     { label: 'Active Users', value: '25K+' },
     { label: 'Countries', value: '150+' }
   ];
+
+  const version = process.env.VITE_APP_VERSION || '1.0.0';
+  const currentYear = new Date().getFullYear();
 
   return (
     <>
@@ -98,16 +102,15 @@ function LandingPage() {
                 className="lg:col-span-6"
               >
                 <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-                  Create Dynamic
+                  Create Dynamic{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-purple-600">
-                    {' '}QR Codes
+                    QR Codes
                   </span>
                   <br />
                   That Work Harder
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 max-w-lg">
-                  Generate, customize, and track QR codes with advanced analytics, 
-                  team collaboration, and beautiful landing pages.
+                  Generate, customize, and track QR codes with advanced analytics, team collaboration, and beautiful landing pages.
                 </p>
                 <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                   <Link
@@ -125,7 +128,7 @@ function LandingPage() {
                   </Link>
                 </div>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -188,11 +191,9 @@ function LandingPage() {
                 Everything You Need to Succeed
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                From basic QR generation to advanced analytics and team collaboration, 
-                we've got all the tools you need.
+                From basic QR generation to advanced analytics and team collaboration, we've got all the tools you need.
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
                 <motion.div
@@ -241,6 +242,124 @@ function LandingPage() {
             </motion.div>
           </div>
         </section>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {/* Brand */}
+              <div className="col-span-1 md:col-span-2">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                    <SafeIcon icon={FiGrid} className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xl font-bold text-gray-900">QR Studio</span>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    v{version}
+                  </span>
+                </div>
+                <p className="text-gray-600 mb-4 max-w-md">
+                  Create, customize, and manage dynamic QR codes with advanced analytics and team collaboration features.
+                </p>
+                <div className="flex space-x-4">
+                  <a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <SafeIcon icon={FiTwitter} className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <SafeIcon icon={FiLinkedin} className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <SafeIcon icon={FiGithub} className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Quick Links */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+                  Quick Links
+                </h3>
+                <ul className="space-y-2">
+                  <li>
+                    <Link to="/login" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Sign In
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Get Started
+                    </Link>
+                  </li>
+                  <li>
+                    <a href="#features" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Features
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#pricing" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Pricing
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Support */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+                  Support
+                </h3>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="#help" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Help Center
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#api" className="text-gray-600 hover:text-gray-900 text-sm">
+                      API Docs
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#contact" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Contact Us
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#privacy" className="text-gray-600 hover:text-gray-900 text-sm">
+                      Privacy Policy
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+              <p className="text-gray-600 text-sm">
+                © {currentYear} QR Studio. All rights reserved.
+              </p>
+              <p className="text-gray-600 text-sm flex items-center mt-2 md:mt-0">
+                Built with{' '}
+                <SafeIcon icon={FiHeart} className="w-4 h-4 text-red-500 mx-1" />
+                and frustration by Alaa Qweider
+              </p>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );

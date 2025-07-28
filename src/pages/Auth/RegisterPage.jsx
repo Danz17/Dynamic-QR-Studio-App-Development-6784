@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import SafeIcon from '../../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiGrid } = FiIcons;
+const { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiGrid, FiAlertCircle } = FiIcons;
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -24,38 +24,36 @@ function RegisterPage() {
 
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-
+    
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-
+    
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-
+    
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setLoading(true);
-    
     try {
       await register({
         name: formData.name,
@@ -71,17 +69,21 @@ function RegisterPage() {
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    
     // Clear error when user starts typing
     if (errors[e.target.name]) {
-      setErrors(prev => ({
-        ...prev,
-        [e.target.name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [e.target.name]: '' }));
     }
+  };
+
+  const handleDemoFill = () => {
+    setFormData({
+      name: 'Demo User',
+      email: 'demo@example.com',
+      password: 'password',
+      confirmPassword: 'password'
+    });
   };
 
   return (
@@ -113,6 +115,34 @@ function RegisterPage() {
               Start creating amazing QR codes today
             </p>
           </div>
+
+          {/* Demo info */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+          >
+            <div className="flex items-start">
+              <SafeIcon icon={FiAlertCircle} className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-800 mb-2 font-medium">
+                  Demo Registration:
+                </p>
+                <div className="text-sm text-blue-700 font-mono bg-blue-100 p-2 rounded mb-2">
+                  <div>Name: Demo User</div>
+                  <div>Email: demo@example.com</div>
+                  <div>Password: password</div>
+                </div>
+                <button
+                  onClick={handleDemoFill}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Fill demo credentials
+                </button>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Form */}
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -197,10 +227,7 @@ function RegisterPage() {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <SafeIcon
-                      icon={showPassword ? FiEyeOff : FiEye}
-                      className="h-5 w-5 text-gray-400 hover:text-gray-600"
-                    />
+                    <SafeIcon icon={showPassword ? FiEyeOff : FiEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   </button>
                 </div>
                 {errors.password && (
@@ -234,10 +261,7 @@ function RegisterPage() {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    <SafeIcon
-                      icon={showConfirmPassword ? FiEyeOff : FiEye}
-                      className="h-5 w-5 text-gray-400 hover:text-gray-600"
-                    />
+                    <SafeIcon icon={showConfirmPassword ? FiEyeOff : FiEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   </button>
                 </div>
                 {errors.confirmPassword && (
@@ -258,8 +282,8 @@ function RegisterPage() {
                 I agree to the{' '}
                 <a href="#" className="text-primary-600 hover:text-primary-500">
                   Terms of Service
-                </a>{' '}
-                and{' '}
+                </a>
+                {' '}and{' '}
                 <a href="#" className="text-primary-600 hover:text-primary-500">
                   Privacy Policy
                 </a>
