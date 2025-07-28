@@ -1,11 +1,13 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { QRProvider } from './contexts/QRContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import {HashRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
+import {HelmetProvider} from 'react-helmet-async';
+import {QueryClient, QueryClientProvider} from 'react-query';
+import {Toaster} from 'react-hot-toast';
+import './i18n';
+
+import {AuthProvider, useAuth} from './contexts/AuthContext';
+import {QRProvider} from './contexts/QRContext';
+import {ThemeProvider} from './contexts/ThemeContext';
 
 // Components
 import Navbar from './components/Layout/Navbar';
@@ -22,6 +24,8 @@ import QRManager from './pages/QRManager/QRManager';
 import Analytics from './pages/Analytics/Analytics';
 import AdvancedAnalytics from './pages/Analytics/AdvancedAnalytics';
 import AdminConsole from './pages/AdminConsole/AdminConsole';
+import UserManagement from './pages/AdminConsole/UserManagement';
+import RolePermissions from './pages/AdminConsole/RolePermissions';
 import Templates from './pages/Templates/Templates';
 import BulkGenerator from './pages/BulkGenerator/BulkGenerator';
 import LandingPageBuilder from './pages/LandingPageBuilder/LandingPageBuilder';
@@ -39,8 +43,8 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+function ProtectedRoute({children}) {
+  const {user, loading} = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
@@ -49,8 +53,8 @@ function ProtectedRoute({ children }) {
   return user ? children : <Navigate to="/login" />;
 }
 
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
+function PublicRoute({children}) {
+  const {user, loading} = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
@@ -60,7 +64,7 @@ function PublicRoute({ children }) {
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const {user} = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -80,6 +84,8 @@ function AppContent() {
           <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
           <Route path="/analytics/advanced" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminConsole /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/roles" element={<ProtectedRoute><RolePermissions /></ProtectedRoute>} />
           <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
           <Route path="/bulk" element={<ProtectedRoute><BulkGenerator /></ProtectedRoute>} />
           <Route path="/landing-builder" element={<ProtectedRoute><LandingPageBuilder /></ProtectedRoute>} />
