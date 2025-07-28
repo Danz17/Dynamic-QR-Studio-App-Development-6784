@@ -3,6 +3,38 @@ import { supabase } from '../lib/supabase';
 class AuthService {
   async login(email, password) {
     try {
+      // Use mock data for demo accounts
+      if (email === 'alaa@nulled.ai' && password === 'password') {
+        const user = {
+          id: 'superadmin-123',
+          email: 'alaa@nulled.ai',
+          name: 'Alaa Qweider',
+          role: 'superAdmin',
+          plan: 'enterprise',
+          avatar: `https://ui-avatars.com/api/?name=Alaa+Qweider&background=3b82f6&color=fff`,
+          createdAt: '2023-01-01T00:00:00.000Z'
+        };
+        
+        localStorage.setItem('token', 'mock-token-superadmin');
+        return { user, session: { access_token: 'mock-token-superadmin' } };
+      }
+      
+      if (email === 'demo@example.com' && password === 'password') {
+        const user = {
+          id: 'demo-123',
+          email: 'demo@example.com',
+          name: 'Demo User',
+          role: 'user',
+          plan: 'pro',
+          avatar: `https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=fff`,
+          createdAt: '2023-01-01T00:00:00.000Z'
+        };
+        
+        localStorage.setItem('token', 'mock-token-demo');
+        return { user, session: { access_token: 'mock-token-demo' } };
+      }
+
+      // For real authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -28,7 +60,6 @@ class AuthService {
       };
 
       localStorage.setItem('token', data.session.access_token);
-      
       return { user, session: data.session };
     } catch (error) {
       console.error('Login error:', error);
@@ -38,13 +69,27 @@ class AuthService {
 
   async register(userData) {
     try {
+      // Use mock data for demo registration
+      if (userData.email === 'demo@example.com') {
+        const user = {
+          id: 'demo-123',
+          email: 'demo@example.com',
+          name: userData.name,
+          role: 'user',
+          plan: 'free',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=3b82f6&color=fff`,
+          createdAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('token', 'mock-token-demo');
+        return { user, session: { access_token: 'mock-token-demo' } };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
-          data: {
-            name: userData.name
-          }
+          data: { name: userData.name }
         }
       });
 
@@ -89,8 +134,35 @@ class AuthService {
 
   async getCurrentUser() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Check for mock tokens
+      const token = localStorage.getItem('token');
       
+      if (token === 'mock-token-superadmin') {
+        return {
+          id: 'superadmin-123',
+          email: 'alaa@nulled.ai',
+          name: 'Alaa Qweider',
+          role: 'superAdmin',
+          plan: 'enterprise',
+          avatar: `https://ui-avatars.com/api/?name=Alaa+Qweider&background=3b82f6&color=fff`,
+          createdAt: '2023-01-01T00:00:00.000Z'
+        };
+      }
+      
+      if (token === 'mock-token-demo') {
+        return {
+          id: 'demo-123',
+          email: 'demo@example.com',
+          name: 'Demo User',
+          role: 'user',
+          plan: 'pro',
+          avatar: `https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=fff`,
+          createdAt: '2023-01-01T00:00:00.000Z'
+        };
+      }
+
+      // Real auth flow
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       const { data: profile } = await supabase
@@ -117,7 +189,6 @@ class AuthService {
   async updateProfile(userData) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) throw new Error('No user found');
 
       const { data, error } = await supabase
@@ -128,7 +199,6 @@ class AuthService {
         .single();
 
       if (error) throw error;
-
       return data;
     } catch (error) {
       console.error('Update profile error:', error);
@@ -143,7 +213,6 @@ class AuthService {
       });
 
       if (error) throw error;
-
       return { message: 'Password updated successfully' };
     } catch (error) {
       console.error('Change password error:', error);
@@ -158,7 +227,6 @@ class AuthService {
       });
 
       if (error) throw error;
-
       return { message: 'Password reset email sent' };
     } catch (error) {
       console.error('Password reset error:', error);
@@ -168,9 +236,15 @@ class AuthService {
 
   async logout() {
     try {
+      // Handle mock tokens
+      if (localStorage.getItem('token') === 'mock-token-superadmin' || 
+          localStorage.getItem('token') === 'mock-token-demo') {
+        localStorage.removeItem('token');
+        return;
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
       localStorage.removeItem('token');
     } catch (error) {
       console.error('Logout error:', error);
