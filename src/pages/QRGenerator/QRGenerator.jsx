@@ -12,12 +12,7 @@ import ShareModal from '../../components/Modals/ShareModal';
 import toast from 'react-hot-toast';
 import * as FiIcons from 'react-icons/fi';
 
-const { 
-  FiLink, FiType, FiWifi, FiUser, FiMail, FiInstagram, 
-  FiDownload, FiSave, FiEye, FiSettings, FiPalette, 
-  FiUpload, FiSmartphone, FiShoppingBag, FiGift, FiShare2,
-  FiInfo, FiAlertTriangle, FiCalendar, FiClock, FiLock
-} = FiIcons;
+const { FiLink, FiType, FiWifi, FiUser, FiMail, FiInstagram, FiDownload, FiSave, FiEye, FiSettings, FiPalette, FiUpload, FiSmartphone, FiShoppingBag, FiGift, FiShare2, FiInfo, FiAlertTriangle, FiCalendar, FiClock, FiLock, FiArrowLeft } = FiIcons;
 
 const QR_TYPES = [
   { id: 'url', name: 'Website URL', icon: FiLink, description: 'Link to any website' },
@@ -34,11 +29,12 @@ const QR_TYPES = [
 function QRGenerator() {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get('template');
+  const editId = searchParams.get('edit');
   
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  
+
   const [selectedType, setSelectedType] = useState('url');
   const [qrData, setQrData] = useState({
     name: '',
@@ -49,7 +45,6 @@ function QRGenerator() {
     expiryDate: '',
     scanLimit: ''
   });
-  
   const [design, setDesign] = useState({
     size: 300,
     bgColor: '#ffffff',
@@ -58,13 +53,13 @@ function QRGenerator() {
     includeMargin: true,
     style: 'square' // square, dots, rounded
   });
-  
   const [activeTab, setActiveTab] = useState('content');
   const [loading, setLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [generatedQR, setGeneratedQR] = useState(null);
   const [errors, setErrors] = useState({});
-  
+  const [isEditMode, setIsEditMode] = useState(false);
   const qrRef = useRef(null);
 
   // Load template if provided
@@ -81,10 +76,49 @@ function QRGenerator() {
       }
     }
   }, [templateId]);
+  
+  // Load QR data if in edit mode
+  useEffect(() => {
+    if (editId) {
+      setEditLoading(true);
+      setIsEditMode(true);
+      
+      // Fetch the QR code data
+      qrService.getUserQRCodes()
+        .then(codes => {
+          const qrToEdit = codes.find(qr => qr.id === editId);
+          if (qrToEdit) {
+            setSelectedType(qrToEdit.type);
+            setQrData({
+              name: qrToEdit.name,
+              content: qrToEdit.content,
+              isDynamic: qrToEdit.isDynamic,
+              isActive: qrToEdit.isActive,
+              password: qrToEdit.password || '',
+              expiryDate: qrToEdit.expiryDate || '',
+              scanLimit: qrToEdit.scanLimit || ''
+            });
+            if (qrToEdit.design) {
+              setDesign(qrToEdit.design);
+            }
+            setGeneratedQR(qrToEdit);
+          } else {
+            toast.error('QR code not found');
+            navigate('/manage');
+          }
+        })
+        .catch(error => {
+          console.error('Error loading QR code:', error);
+          toast.error('Failed to load QR code');
+        })
+        .finally(() => {
+          setEditLoading(false);
+        });
+    }
+  }, [editId, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!qrData.name.trim()) {
       newErrors.name = 'QR code name is required';
     }
@@ -123,17 +157,23 @@ function QRGenerator() {
         design,
         userId: user.id
       };
-
-      const newQR = await qrService.createQRCode(qrCodeData);
+      
+      let newQR;
+      if (isEditMode) {
+        newQR = await qrService.updateQRCode(editId, qrCodeData);
+        toast.success('QR code updated successfully!');
+      } else {
+        newQR = await qrService.createQRCode(qrCodeData);
+        toast.success('QR code created successfully!');
+      }
+      
       setGeneratedQR(newQR);
-      toast.success('QR code created successfully!');
       
       // Show share modal
       setTimeout(() => setShowShareModal(true), 500);
-      
     } catch (error) {
       console.error('Save error:', error);
-      toast.error('Failed to create QR code');
+      toast.error(isEditMode ? 'Failed to update QR code' : 'Failed to create QR code');
     } finally {
       setLoading(false);
     }
@@ -147,7 +187,7 @@ function QRGenerator() {
 
     const link = document.createElement('a');
     link.download = `${qrData.name || 'qr-code'}.${format}`;
-    
+
     if (format === 'png') {
       link.href = canvas.toDataURL('image/png');
     } else if (format === 'svg') {
@@ -155,11 +195,11 @@ function QRGenerator() {
       const svg = canvas.toDataURL('image/svg+xml');
       link.href = svg;
     }
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success(`QR code downloaded as ${format.toUpperCase()}`);
   };
 
@@ -177,9 +217,7 @@ function QRGenerator() {
                 value={qrData.content}
                 onChange={(e) => setQrData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="https://example.com"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.content ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.content ? 'border-red-300' : 'border-gray-300'}`}
               />
               {errors.content && (
                 <p className="mt-1 text-sm text-red-600">{errors.content}</p>
@@ -187,7 +225,6 @@ function QRGenerator() {
             </div>
           </div>
         );
-
       case 'text':
         return (
           <div className="space-y-4">
@@ -200,9 +237,7 @@ function QRGenerator() {
                 onChange={(e) => setQrData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Enter your text message"
                 rows={4}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.content ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.content ? 'border-red-300' : 'border-gray-300'}`}
               />
               {errors.content && (
                 <p className="mt-1 text-sm text-red-600">{errors.content}</p>
@@ -210,7 +245,6 @@ function QRGenerator() {
             </div>
           </div>
         );
-
       case 'wifi':
         return (
           <div className="space-y-4">
@@ -221,10 +255,7 @@ function QRGenerator() {
               <input
                 type="text"
                 value={qrData.content?.ssid || ''}
-                onChange={(e) => setQrData(prev => ({ 
-                  ...prev, 
-                  content: { ...prev.content, ssid: e.target.value }
-                }))}
+                onChange={(e) => setQrData(prev => ({ ...prev, content: { ...prev.content, ssid: e.target.value } }))}
                 placeholder="WiFi Network Name"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
@@ -236,10 +267,7 @@ function QRGenerator() {
               <input
                 type="password"
                 value={qrData.content?.password || ''}
-                onChange={(e) => setQrData(prev => ({ 
-                  ...prev, 
-                  content: { ...prev.content, password: e.target.value }
-                }))}
+                onChange={(e) => setQrData(prev => ({ ...prev, content: { ...prev.content, password: e.target.value } }))}
                 placeholder="WiFi Password"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
@@ -250,10 +278,7 @@ function QRGenerator() {
               </label>
               <select
                 value={qrData.content?.security || 'WPA'}
-                onChange={(e) => setQrData(prev => ({ 
-                  ...prev, 
-                  content: { ...prev.content, security: e.target.value }
-                }))}
+                onChange={(e) => setQrData(prev => ({ ...prev, content: { ...prev.content, security: e.target.value } }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="WPA">WPA/WPA2</option>
@@ -263,7 +288,6 @@ function QRGenerator() {
             </div>
           </div>
         );
-
       default:
         return (
           <div className="space-y-4">
@@ -276,9 +300,7 @@ function QRGenerator() {
                 value={qrData.content}
                 onChange={(e) => setQrData(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Enter content"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                  errors.content ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.content ? 'border-red-300' : 'border-gray-300'}`}
               />
               {errors.content && (
                 <p className="mt-1 text-sm text-red-600">{errors.content}</p>
@@ -289,13 +311,20 @@ function QRGenerator() {
     }
   };
 
+  if (editLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>{t('nav.generate')} - QR Studio</title>
+        <title>{isEditMode ? 'Edit QR Code' : t('nav.generate')} - QR Studio</title>
         <meta name="description" content="Create custom QR codes with advanced design options and analytics tracking." />
       </Helmet>
-
       <div className="min-h-screen bg-gray-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -305,11 +334,24 @@ function QRGenerator() {
             transition={{ duration: 0.6 }}
             className="mb-6 md:mb-8"
           >
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              {t('nav.generate')}
-            </h1>
+            <div className="flex items-center mb-2">
+              {isEditMode && (
+                <button 
+                  onClick={() => navigate('/manage')} 
+                  className="mr-3 p-1 hover:bg-gray-100 rounded-full"
+                  aria-label="Back to QR Manager"
+                >
+                  <SafeIcon icon={FiArrowLeft} className="w-5 h-5 text-gray-600" />
+                </button>
+              )}
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                {isEditMode ? 'Edit QR Code' : t('nav.generate')}
+              </h1>
+            </div>
             <p className="text-gray-600">
-              Create a custom QR code with advanced design options.
+              {isEditMode 
+                ? 'Modify your QR code details and settings' 
+                : 'Create a custom QR code with advanced design options.'}
             </p>
           </motion.div>
 
@@ -317,33 +359,35 @@ function QRGenerator() {
             {/* Configuration Panel */}
             <div className="lg:col-span-2 space-y-6">
               {/* QR Type Selection */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200"
-              >
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
-                  Select QR Code Type
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  {QR_TYPES.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setSelectedType(type.id)}
-                      className={`p-3 md:p-4 rounded-lg border-2 transition-colors text-left ${
-                        selectedType === type.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <SafeIcon icon={type.icon} className="w-5 h-5 md:w-6 md:h-6 text-primary-600 mb-2" />
-                      <h3 className="font-medium text-gray-900 text-sm md:text-base">{type.name}</h3>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1">{type.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
+              {!isEditMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200"
+                >
+                  <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+                    Select QR Code Type
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    {QR_TYPES.map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => setSelectedType(type.id)}
+                        className={`p-3 md:p-4 rounded-lg border-2 transition-colors text-left ${
+                          selectedType === type.id
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <SafeIcon icon={type.icon} className="w-5 h-5 md:w-6 md:h-6 text-primary-600 mb-2" />
+                        <h3 className="font-medium text-gray-900 text-sm md:text-base">{type.name}</h3>
+                        <p className="text-xs md:text-sm text-gray-600 mt-1">{type.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
               {/* Content Configuration */}
               <motion.div
@@ -381,9 +425,7 @@ function QRGenerator() {
                         value={qrData.name}
                         onChange={(e) => setQrData(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Enter a name for your QR code"
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                          errors.name ? 'border-red-300' : 'border-gray-300'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
                       />
                       {errors.name && (
                         <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -415,7 +457,6 @@ function QRGenerator() {
                           />
                         </div>
                       </div>
-
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Background Color
@@ -436,7 +477,6 @@ function QRGenerator() {
                         </div>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Size
@@ -455,6 +495,34 @@ function QRGenerator() {
                         <span>500px</span>
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        QR Style
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => setDesign(prev => ({ ...prev, style: 'square' }))}
+                          className={`p-3 rounded-lg border-2 transition-colors ${design.style === 'square' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}
+                        >
+                          <div className="mx-auto w-12 h-12 bg-gray-800 rounded-lg"></div>
+                          <p className="text-center text-sm mt-2">Square</p>
+                        </button>
+                        <button
+                          onClick={() => setDesign(prev => ({ ...prev, style: 'dots' }))}
+                          className={`p-3 rounded-lg border-2 transition-colors ${design.style === 'dots' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}
+                        >
+                          <div className="mx-auto w-12 h-12 bg-gray-800 rounded-full"></div>
+                          <p className="text-center text-sm mt-2">Dots</p>
+                        </button>
+                        <button
+                          onClick={() => setDesign(prev => ({ ...prev, style: 'rounded' }))}
+                          className={`p-3 rounded-lg border-2 transition-colors ${design.style === 'rounded' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'}`}
+                        >
+                          <div className="mx-auto w-12 h-12 bg-gray-800 rounded-2xl"></div>
+                          <p className="text-center text-sm mt-2">Rounded</p>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -464,7 +532,12 @@ function QRGenerator() {
                       <div>
                         <h3 className="font-medium text-gray-900 flex items-center">
                           Dynamic QR Code
-                          <SafeIcon icon={FiInfo} className="w-4 h-4 ml-2 text-gray-400" />
+                          <div className="group relative ml-2">
+                            <SafeIcon icon={FiInfo} className="w-4 h-4 text-gray-400" />
+                            <div className="absolute z-10 bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-60 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              Dynamic QR codes can be edited after creation, allowing you to change their destination without reprinting
+                            </div>
+                          </div>
                         </h3>
                         <p className="text-sm text-gray-600">
                           Allow editing content after creation
@@ -498,8 +571,10 @@ function QRGenerator() {
                             placeholder="Enter password"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                           />
+                          <p className="mt-1 text-xs text-gray-500">
+                            If set, users will need to enter this password to access the content
+                          </p>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -511,15 +586,15 @@ function QRGenerator() {
                               value={qrData.expiryDate}
                               onChange={(e) => setQrData(prev => ({ ...prev, expiryDate: e.target.value }))}
                               min={new Date().toISOString().slice(0, 16)}
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                                errors.expiryDate ? 'border-red-300' : 'border-gray-300'
-                              }`}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.expiryDate ? 'border-red-300' : 'border-gray-300'}`}
                             />
                             {errors.expiryDate && (
                               <p className="mt-1 text-sm text-red-600">{errors.expiryDate}</p>
                             )}
+                            <p className="mt-1 text-xs text-gray-500">
+                              QR code will stop working after this date
+                            </p>
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               <SafeIcon icon={FiClock} className="w-4 h-4 inline mr-1" />
@@ -531,17 +606,50 @@ function QRGenerator() {
                               onChange={(e) => setQrData(prev => ({ ...prev, scanLimit: e.target.value }))}
                               placeholder="Unlimited"
                               min="1"
-                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
-                                errors.scanLimit ? 'border-red-300' : 'border-gray-300'
-                              }`}
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${errors.scanLimit ? 'border-red-300' : 'border-gray-300'}`}
                             />
                             {errors.scanLimit && (
                               <p className="mt-1 text-sm text-red-600">{errors.scanLimit}</p>
                             )}
+                            <p className="mt-1 text-xs text-gray-500">
+                              QR code will stop working after this many scans
+                            </p>
                           </div>
                         </div>
                       </>
                     )}
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900 flex items-center">
+                          Active Status
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Enable or disable this QR code
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={qrData.isActive}
+                        onChange={(e) => setQrData(prev => ({ ...prev, isActive: e.target.checked }))}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <SafeIcon icon={FiInfo} className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-medium text-blue-800">Advanced Settings</h4>
+                          <p className="text-sm text-blue-700 mt-1">
+                            For more options like custom landing pages, advanced tracking, and retargeting, check out our Pro features.
+                          </p>
+                          <button className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline">
+                            Learn more
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -563,7 +671,7 @@ function QRGenerator() {
                   <div ref={qrRef} className="p-4 bg-gray-50 rounded-lg">
                     {qrData.content ? (
                       <QRCode
-                        value={qrData.content}
+                        value={typeof qrData.content === 'string' ? qrData.content : JSON.stringify(qrData.content)}
                         size={design.size}
                         bgColor={design.bgColor}
                         fgColor={design.fgColor}
@@ -599,7 +707,6 @@ function QRGenerator() {
                       <span>SVG</span>
                     </button>
                   </div>
-                  
                   <button
                     onClick={handleSave}
                     disabled={!qrData.name || !qrData.content || loading}
@@ -610,11 +717,10 @@ function QRGenerator() {
                     ) : (
                       <>
                         <SafeIcon icon={FiSave} className="w-4 h-4" />
-                        <span>Save QR Code</span>
+                        <span>{isEditMode ? 'Update QR Code' : 'Save QR Code'}</span>
                       </>
                     )}
                   </button>
-
                   {generatedQR && (
                     <button
                       onClick={() => setShowShareModal(true)}
@@ -649,6 +755,24 @@ function QRGenerator() {
                       {qrData.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
+                  {qrData.password && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Password Protected:</span>
+                      <span className="font-medium text-yellow-600">Yes</span>
+                    </div>
+                  )}
+                  {qrData.expiryDate && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Expires:</span>
+                      <span className="font-medium">{new Date(qrData.expiryDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {qrData.scanLimit && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Scan Limit:</span>
+                      <span className="font-medium">{qrData.scanLimit}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

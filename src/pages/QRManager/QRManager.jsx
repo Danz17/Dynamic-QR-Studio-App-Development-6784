@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQR } from '../../contexts/QRContext';
 import SafeIcon from '../../common/SafeIcon';
 import LoadingSpinner from '../../components/UI/LoadingSpinner';
 import * as FiIcons from 'react-icons/fi';
 
-const { 
-  FiPlus, FiEdit, FiTrash2, FiCopy, FiEye, FiDownload, 
-  FiCalendar, FiFilter, FiSearch, FiGrid, FiList, FiMoreHorizontal
-} = FiIcons;
+const { FiPlus, FiEdit, FiTrash2, FiCopy, FiEye, FiDownload, FiCalendar, FiFilter, FiSearch, FiGrid, FiList, FiMoreHorizontal } = FiIcons;
 
 function QRManager() {
   const { qrCodes, fetchQRCodes, deleteQRCode, duplicateQRCode, loading } = useQR();
@@ -20,13 +17,18 @@ function QRManager() {
   const [selectedQR, setSelectedQR] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
-  
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetchQRCodes();
   }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleEdit = (qr) => {
+    navigate(`/generate?edit=${qr.id}`);
   };
 
   const handleDelete = async (id) => {
@@ -51,22 +53,17 @@ function QRManager() {
     .filter(qr => {
       // Search filter
       const matchesSearch = qr.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
       // Type filter
       const matchesFilter = filter === 'all' || qr.type === filter;
-      
       // Status filter (active/inactive)
-      const matchesStatus = 
-        (filter === 'active' && qr.isActive) || 
-        (filter === 'inactive' && !qr.isActive) || 
-        filter !== 'active' && filter !== 'inactive';
-      
+      const matchesStatus = (filter === 'active' && qr.isActive) || 
+                           (filter === 'inactive' && !qr.isActive) || 
+                           filter !== 'active' && filter !== 'inactive';
       // Dynamic filter
-      const matchesDynamic = 
-        (filter === 'dynamic' && qr.isDynamic) || 
-        (filter === 'static' && !qr.isDynamic) || 
-        filter !== 'dynamic' && filter !== 'static';
-      
+      const matchesDynamic = (filter === 'dynamic' && qr.isDynamic) || 
+                            (filter === 'static' && !qr.isDynamic) || 
+                            filter !== 'dynamic' && filter !== 'static';
+
       return matchesSearch && matchesFilter && matchesStatus && matchesDynamic;
     })
     .sort((a, b) => {
@@ -98,10 +95,7 @@ function QRManager() {
 
   const renderQRCodeItem = (qr) => {
     return (
-      <div 
-        key={qr.id} 
-        className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-      >
+      <div key={qr.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
         {/* Preview */}
         <div className="p-4 border-b border-gray-100 flex justify-center">
           <div className="w-32 h-32 bg-gray-50 rounded-lg flex items-center justify-center">
@@ -110,20 +104,14 @@ function QRManager() {
             </div>
           </div>
         </div>
-        
         {/* Details */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-900 truncate">{qr.name}</h3>
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              qr.isActive 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
-            }`}>
+            <span className={`px-2 py-1 text-xs rounded-full ${qr.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
               {qr.isActive ? 'Active' : 'Inactive'}
             </span>
           </div>
-          
           <div className="text-sm text-gray-600 mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="flex items-center">
@@ -139,12 +127,11 @@ function QRManager() {
               <span>{new Date(qr.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
-          
           {/* Actions */}
           <div className="flex items-center space-x-2 mt-3">
             <button 
               className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700 transition-colors"
-              onClick={() => {}}
+              onClick={() => handleEdit(qr)}
             >
               <SafeIcon icon={FiEdit} className="w-4 h-4" />
               <span>Edit</span>
@@ -172,10 +159,7 @@ function QRManager() {
 
   const renderQRCodeListItem = (qr) => {
     return (
-      <div 
-        key={qr.id} 
-        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
-      >
+      <div key={qr.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
         <div className="flex items-center">
           {/* QR Preview */}
           <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center mr-4">
@@ -183,16 +167,11 @@ function QRManager() {
               {/* QR Preview would go here */}
             </div>
           </div>
-          
           {/* Details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-medium text-gray-900 truncate">{qr.name}</h3>
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                qr.isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`px-2 py-1 text-xs rounded-full ${qr.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                 {qr.isActive ? 'Active' : 'Inactive'}
               </span>
             </div>
@@ -207,12 +186,11 @@ function QRManager() {
               <span>{new Date(qr.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
-          
           {/* Actions */}
           <div className="flex items-center space-x-1 ml-4">
             <button 
               className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
-              onClick={() => {}}
+              onClick={() => handleEdit(qr)}
             >
               <SafeIcon icon={FiEdit} className="w-4 h-4" />
             </button>
@@ -243,7 +221,6 @@ function QRManager() {
         <title>Manage QR Codes - QR Studio</title>
         <meta name="description" content="Manage and organize all your QR codes in one place." />
       </Helmet>
-
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -294,7 +271,6 @@ function QRManager() {
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
-              
               <div className="flex space-x-2">
                 <select
                   value={filter}
@@ -311,7 +287,6 @@ function QRManager() {
                   <option value="dynamic">Dynamic</option>
                   <option value="static">Static</option>
                 </select>
-                
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -324,7 +299,6 @@ function QRManager() {
                   <option value="scans-high">Most Scans</option>
                   <option value="scans-low">Least Scans</option>
                 </select>
-                
                 <div className="hidden md:flex border border-gray-300 rounded-md">
                   <button
                     onClick={() => setView('grid')}
@@ -370,7 +344,7 @@ function QRManager() {
               <SafeIcon icon={FiFilter} className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No QR codes found</h3>
               <p className="text-gray-600 mb-6">
-                {searchTerm || filter !== 'all'
+                {searchTerm || filter !== 'all' 
                   ? 'Try adjusting your search or filters'
                   : 'Create your first QR code to get started'}
               </p>

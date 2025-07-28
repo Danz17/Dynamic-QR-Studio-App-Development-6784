@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -9,11 +9,7 @@ import LanguageSelector from '../UI/LanguageSelector';
 import AuthModal from '../Auth/AuthModal';
 import * as FiIcons from 'react-icons/fi';
 
-const {
-  FiMenu, FiX, FiHome, FiPlus, FiGrid, FiBarChart3, FiUsers, FiSettings,
-  FiLogOut, FiUser, FiTemplate, FiUpload, FiEdit3, FiShield, FiGlobe,
-  FiTrendingUp, FiUserCheck, FiLogIn
-} = FiIcons;
+const { FiMenu, FiX, FiHome, FiPlus, FiGrid, FiBarChart3, FiUsers, FiSettings, FiLogOut, FiUser, FiTemplate, FiUpload, FiEdit3, FiShield, FiGlobe, FiTrendingUp, FiUserCheck, FiLogIn, FiSun, FiMoon, FiBell, FiHelpCircle } = FiIcons;
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,9 +18,26 @@ function Navbar() {
   const [authModalMode, setAuthModalMode] = useState('login');
   const { t } = useTranslation();
   const { user, logout, isSuperAdmin, canAccessAdmin } = useAuthStore();
-  const { siteName, logoUrl } = useSettingsStore();
+  const { siteName, logoUrl, theme, toggleTheme } = useSettingsStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const navigation = [
     { name: t('nav.dashboard'), href: '/dashboard', icon: FiHome },
@@ -54,6 +67,7 @@ function Navbar() {
   const handleLogout = () => {
     logout();
     navigate('/');
+    setShowUserMenu(false);
   };
 
   const openAuthModal = (mode) => {
@@ -63,7 +77,7 @@ function Navbar() {
 
   return (
     <>
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+      <nav className={`bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 transition-all ${scrolled ? 'shadow-md' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             {/* Logo and brand */}
@@ -83,24 +97,20 @@ function Navbar() {
             {/* Desktop navigation */}
             <div className="hidden lg:flex items-center space-x-2">
               {user && navigation.map((item) => {
-                const isActive = location.pathname === item.href || 
-                  (item.children && item.children.some(child => location.pathname === child.href));
-                
+                const isActive = location.pathname === item.href || (item.children && item.children.some(child => location.pathname === child.href));
+
                 if (item.children) {
                   return (
                     <div key={item.name} className="relative group">
                       <Link
                         to={item.href}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-primary-100 text-primary-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                          isActive ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         }`}
                       >
                         <SafeIcon icon={item.icon} className="w-4 h-4" />
                         <span className="hidden xl:block">{item.name}</span>
                       </Link>
-                      
                       {/* Dropdown */}
                       <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div className="py-1">
@@ -109,9 +119,7 @@ function Navbar() {
                               key={child.href}
                               to={child.href}
                               className={`flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-100 ${
-                                location.pathname === child.href
-                                  ? 'bg-primary-50 text-primary-700'
-                                  : 'text-gray-700'
+                                location.pathname === child.href ? 'bg-primary-50 text-primary-700' : 'text-gray-700'
                               }`}
                             >
                               <SafeIcon icon={child.icon} className="w-4 h-4" />
@@ -129,9 +137,7 @@ function Navbar() {
                     key={item.name}
                     to={item.href}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      isActive ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
                     <SafeIcon icon={item.icon} className="w-4 h-4" />
@@ -145,9 +151,7 @@ function Navbar() {
                 <Link
                   to="/analytics/advanced"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === '/analytics/advanced'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    location.pathname === '/analytics/advanced' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
                   <SafeIcon icon={FiTrendingUp} className="w-4 h-4" />
@@ -158,39 +162,68 @@ function Navbar() {
 
             {/* User menu and language selector */}
             <div className="flex items-center space-x-4">
-              <LanguageSelector />
+              {/* Theme toggle */}
+              <button 
+                onClick={toggleTheme} 
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                <SafeIcon icon={theme === 'dark' ? FiSun : FiMoon} className="w-5 h-5" />
+              </button>
               
+              {/* Language selector */}
+              <LanguageSelector />
+
+              {/* Help */}
+              <button className="hidden md:flex p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+                <SafeIcon icon={FiHelpCircle} className="w-5 h-5" />
+              </button>
+              
+              {/* Notifications */}
+              {user && (
+                <button className="hidden md:flex relative p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+                  <SafeIcon icon={FiBell} className="w-5 h-5" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+              )}
+
               {user ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors"
                   >
-                    <img
-                      src={user?.avatar}
-                      alt={user?.name}
-                      className="w-8 h-8 rounded-full"
-                    />
+                    <img src={user?.avatar} alt={user?.name} className="w-8 h-8 rounded-full" />
                     <span className="hidden md:block text-sm font-medium text-gray-700">
                       {user?.name}
                     </span>
                   </button>
-
                   <AnimatePresence>
                     {showUserMenu && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
                       >
-                        <div className="py-1">
-                          <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
-                            {user?.email}
-                            <div className="text-xs text-primary-600 capitalize">
-                              {user?.role} • {user?.plan}
+                        <div className="p-4 border-b border-gray-100">
+                          <div className="flex items-center space-x-3">
+                            <img src={user?.avatar} alt={user?.name} className="w-12 h-12 rounded-full" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+                              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                             </div>
                           </div>
+                          <div className="mt-3">
+                            <div className="text-xs text-primary-600 capitalize flex items-center justify-between">
+                              <span>{user?.role} • {user?.plan}</span>
+                              <Link to="/settings" className="text-primary-600 hover:text-primary-700 text-xs">
+                                Upgrade
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="py-1">
                           <Link
                             to="/settings"
                             className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -262,7 +295,7 @@ function Navbar() {
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden bg-white border-t border-gray-200"
             >
-              <div className="px-2 pt-2 pb-3 space-y-1 max-h-96 overflow-y-auto">
+              <div className="px-2 pt-2 pb-3 space-y-1 max-h-[70vh] overflow-y-auto">
                 {user ? (
                   <>
                     {navigation.map((item) => {
@@ -272,9 +305,7 @@ function Navbar() {
                             <Link
                               to={item.href}
                               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
-                                location.pathname === item.href
-                                  ? 'bg-primary-100 text-primary-700'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                location.pathname === item.href ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                               }`}
                               onClick={() => setIsOpen(false)}
                             >
@@ -287,9 +318,7 @@ function Navbar() {
                                   key={child.href}
                                   to={child.href}
                                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm ${
-                                    location.pathname === child.href
-                                      ? 'bg-primary-100 text-primary-700'
-                                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    location.pathname === child.href ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                                   }`}
                                   onClick={() => setIsOpen(false)}
                                 >
@@ -308,9 +337,7 @@ function Navbar() {
                           key={item.name}
                           to={item.href}
                           className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
-                            isActive
-                              ? 'bg-primary-100 text-primary-700'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            isActive ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                           }`}
                           onClick={() => setIsOpen(false)}
                         >
@@ -324,15 +351,43 @@ function Navbar() {
                     <Link
                       to="/analytics/advanced"
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
-                        location.pathname === '/analytics/advanced'
-                          ? 'bg-primary-100 text-primary-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        location.pathname === '/analytics/advanced' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }`}
                       onClick={() => setIsOpen(false)}
                     >
                       <SafeIcon icon={FiTrendingUp} className="w-4 h-4" />
                       <span>Advanced Analytics</span>
                     </Link>
+                    
+                    {/* Mobile-specific user menu items */}
+                    <div className="pt-4 pb-3 border-t border-gray-200">
+                      <div className="flex items-center px-3">
+                        <div className="flex-shrink-0">
+                          <img className="h-10 w-10 rounded-full" src={user.avatar} alt={user.name} />
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-base font-medium text-gray-800">{user.name}</div>
+                          <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-1">
+                        <Link
+                          to="/settings"
+                          className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <SafeIcon icon={FiSettings} className="w-4 h-4" />
+                          <span>Settings</span>
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-900 hover:bg-red-50"
+                        >
+                          <SafeIcon icon={FiLogOut} className="w-4 h-4" />
+                          <span>Log out</span>
+                        </button>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -365,10 +420,10 @@ function Navbar() {
       </nav>
 
       {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
+      <AuthModal
+        isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        initialMode={authModalMode} 
+        initialMode={authModalMode}
       />
     </>
   );
